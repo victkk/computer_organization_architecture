@@ -17,7 +17,8 @@ sumn:
 	.mask	0x40000000,-4
 	.fmask	0x00000000,0
 	.set	noreorder
-	.set	nomacro
+	.cpload	$25
+	.set	reorder
 	addiu	$sp,$sp,-16
 	sw	$fp,12($sp)
 	move	$fp,$sp
@@ -25,11 +26,7 @@ sumn:
 	sw	$5,20($fp)
 	sw	$0,0($fp)
 	sw	$0,4($fp)
-	.option	pic0
 	b	$L2
-	nop
-
-	.option	pic2
 $L3:
 	lw	$2,4($fp)
 	sll	$2,$2,2
@@ -47,17 +44,11 @@ $L2:
 	lw	$2,20($fp)
 	slt	$2,$3,$2
 	bne	$2,$0,$L3
-	nop
-
 	lw	$2,0($fp)
 	move	$sp,$fp
 	lw	$fp,12($sp)
 	addiu	$sp,$sp,16
-	jr	$31
-	nop
-
-	.set	macro
-	.set	reorder
+	j	$31
 	.end	sumn
 	.size	sumn, .-sumn
 	.rdata
@@ -76,15 +67,14 @@ main:
 	.mask	0xc0000000,-4
 	.fmask	0x00000000,0
 	.set	noreorder
-	.set	nomacro
+	.cpload	$25
+	.set	reorder
 	addiu	$sp,$sp,-80
 	sw	$31,76($sp)
 	sw	$fp,72($sp)
 	move	$fp,$sp
-	lui	$28,%hi(__gnu_local_gp)
-	addiu	$28,$28,%lo(__gnu_local_gp)
 	.cprestore	16
-	lw	$2,%got(__stack_chk_guard)($28)
+	la	$2,__stack_chk_guard
 	lw	$2,0($2)
 	sw	$2,68($fp)
 	li	$2,9			# 0x9
@@ -108,48 +98,25 @@ main:
 	addiu	$2,$fp,36
 	lw	$5,28($fp)
 	move	$4,$2
-	.option	pic0
 	jal	sumn
-	nop
-
-	.option	pic2
-	lw	$28,16($fp)
 	sw	$2,32($fp)
 	lw	$5,32($fp)
-	lui	$2,%hi($LC0)
-	addiu	$4,$2,%lo($LC0)
-	lw	$2,%call16(printf)($28)
-	move	$25,$2
-	.reloc	1f,R_MIPS_JALR,printf
-1:	jalr	$25
-	nop
-
-	lw	$28,16($fp)
+	la	$4,$LC0
+	jal	printf
 	move	$2,$0
 	move	$4,$2
-	lw	$2,%got(__stack_chk_guard)($28)
+	la	$2,__stack_chk_guard
 	lw	$3,68($fp)
 	lw	$2,0($2)
 	beq	$3,$2,$L7
-	nop
-
-	lw	$2,%call16(__stack_chk_fail)($28)
-	move	$25,$2
-	.reloc	1f,R_MIPS_JALR,__stack_chk_fail
-1:	jalr	$25
-	nop
-
+	jal	__stack_chk_fail
 $L7:
 	move	$2,$4
 	move	$sp,$fp
 	lw	$31,76($sp)
 	lw	$fp,72($sp)
 	addiu	$sp,$sp,80
-	jr	$31
-	nop
-
-	.set	macro
-	.set	reorder
+	j	$31
 	.end	main
 	.size	main, .-main
 	.ident	"GCC: (Ubuntu 9.4.0-1ubuntu1~20.04) 9.4.0"
